@@ -1,0 +1,136 @@
+{
+  "app": {
+    "name": "DemoShop",
+    "version": "1.0"
+  },
+  "screens": [
+    {
+      "screen_id": "screen_d29a7ec7",
+      "name": "Unknown Screen",
+      "purpose": "Failed to analyze",
+      "elements": [],
+      "forms": [],
+      "actions": [],
+      "design": {
+        "theme": "unknown",
+        "primary_color": "#000000",
+        "background_color": "#ffffff",
+        "font_family": "Roboto",
+        "corner_style": "unknown"
+      }
+    },
+    {
+      "screen_id": "screen_327557ec",
+      "name": "Unknown Screen",
+      "purpose": "Failed to analyze",
+      "elements": [],
+      "forms": [],
+      "actions": [],
+      "design": {
+        "theme": "unknown",
+        "primary_color": "#000000",
+        "background_color": "#ffffff",
+        "font_family": "Roboto",
+        "corner_style": "unknown"
+      }
+    },
+    {
+      "screen_id": "screen_9c6f9197",
+      "name": "Unknown Screen",
+      "purpose": "Failed to analyze",
+      "elements": [],
+      "forms": [],
+      "actions": [],
+      "design": {
+        "theme": "unknown",
+        "primary_color": "#000000",
+        "background_color": "#ffffff",
+        "font_family": "Roboto",
+        "corner_style": "unknown"
+      }
+    },
+    {
+      "screen_id": "screen_610d0287",
+      "name": "Unknown Screen",
+      "purpose": "Failed to analyze",
+      "elements": [],
+      "forms": [],
+      "actions": [],
+      "design": {
+        "theme": "unknown",
+        "primary_color": "#000000",
+        "background_color": "#ffffff",
+        "font_family": "Roboto",
+        "corner_style": "unknown"
+      }
+    }
+  ],
+  "journeys": [
+    {
+      "name": "Main Navigation Flow",
+      "steps": [
+        "screen_d29a7ec7",
+        "screen_327557ec",
+        "screen_9c6f9197"
+      ]
+    }
+  ],
+  "design_system": {
+    "theme": "unknown",
+    "primary_color": "#000000",
+    "background_color": "#ffffff",
+    "font_family": "Roboto",
+    "corner_style": "unknown"
+  },
+  "navigation_graph": {
+    "nodes": [
+      {
+        "id": "screen_d29a7ec7",
+        "name": "Unknown Screen"
+      },
+      {
+        "id": "screen_327557ec",
+        "name": "Unknown Screen"
+      },
+      {
+        "id": "screen_9c6f9197",
+        "name": "Unknown Screen"
+      },
+      {
+        "id": "screen_610d0287",
+        "name": "Unknown Screen"
+      }
+    ],
+    "edges": [
+      {
+        "from_node": "screen_d29a7ec7",
+        "action": "tap login_btn",
+        "to_node": "screen_327557ec"
+      },
+      {
+        "from_node": "screen_327557ec",
+        "action": "tap nav_settings",
+        "to_node": "screen_9c6f9197"
+      },
+      {
+        "from_node": "screen_9c6f9197",
+        "action": "tap btn_back",
+        "to_node": "screen_327557ec"
+      },
+      {
+        "from_node": "screen_327557ec",
+        "action": "tap nav_products",
+        "to_node": "screen_610d0287"
+      },
+      {
+        "from_node": "screen_610d0287",
+        "action": "tap btn_back",
+        "to_node": "screen_327557ec"
+      }
+    ]
+  },
+  "scan_metadata": {
+    "screens_discovered": 4,
+    "elements_discovered": 0
+  }
+}
