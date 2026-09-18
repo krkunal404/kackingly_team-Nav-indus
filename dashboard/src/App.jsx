@@ -117,7 +117,7 @@ function App() {
             {logs.length > 0 && (
               <div className="status-log" ref={logRef}>
                 {logs.map((log, i) => (
-                  <div key={i} className="log-entry">> {log}</div>
+                  <div key={i} className="log-entry">&gt; {log}</div>
                 ))}
               </div>
             )}
