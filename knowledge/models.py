@@ -22,12 +22,15 @@ class Design(BaseModel):
 
 class Screen(BaseModel):
     screen_id: str
-    name: str
-    purpose: str
+    name: Optional[str] = None
+    purpose: Optional[str] = None
+    screenshot: Optional[str] = None
     elements: List[Element] = Field(default_factory=list)
     forms: List[Dict[str, Any]] = Field(default_factory=list)
     actions: List[Action] = Field(default_factory=list)
-    design: Design
+    actions_taken: List[str] = Field(default_factory=list)
+    next_action: Optional[Action] = None
+    design: Optional[Design] = None
 
 class GraphNode(BaseModel):
     id: str
