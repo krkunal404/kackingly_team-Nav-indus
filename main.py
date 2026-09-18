@@ -18,6 +18,7 @@ from ai.knowledge_generator import KnowledgeGenerator
 from ai.query_agent import QueryAgent
 from mock_data import LOGIN_UI, HOME_UI, SETTINGS_UI, PRODUCTS_UI
 from knowledge.models import KnowledgePack
+from ai.explorer import AutonomousExplorer
 
 app = FastAPI()
 
@@ -39,68 +40,19 @@ class QueryRequest(BaseModel):
 @app.get("/api/scan")
 async def scan_app():
     """
-    Simulates the autonomous explorer and yields SSE status updates.
+    Runs the autonomous explorer and yields SSE status updates.
     """
+    explorer = AutonomousExplorer(max_steps=5) # Default config for demo
+    
     async def event_stream():
         global app_knowledge_pack
-        
-        yield "data: {\"status\": \"Starting autonomous exploration...\"}\n\n"
-        await asyncio.sleep(1)
-        
-        yield "data: {\"status\": \"✓ Application launched\"}\n\n"
-        
-        analyzer = ScreenAnalyzer()
-        graph = GraphManager()
-        
-        # 1. Login
-        login_id = generate_fingerprint(LOGIN_UI)
-        yield f"data: {{\"status\": \"✓ Login screen detected (ID: {login_id})\"}}\n\n"
-        login_screen = analyzer.analyze_screen(login_id, LOGIN_UI)
-        graph.add_screen(login_screen)
-        await asyncio.sleep(1)
-        
-        yield "data: {\"status\": \"✓ Login completed (Simulating action)\"}\n\n"
-        
-        # 2. Home
-        home_id = generate_fingerprint(HOME_UI)
-        yield f"data: {{\"status\": \"✓ Home discovered (ID: {home_id})\"}}\n\n"
-        home_screen = analyzer.analyze_screen(home_id, HOME_UI)
-        graph.add_screen(home_screen)
-        
-        # Add Edge
-        graph.add_transition(login_id, "tap login_btn", home_id)
-        await asyncio.sleep(1)
-        
-        # 3. Settings
-        settings_id = generate_fingerprint(SETTINGS_UI)
-        yield f"data: {{\"status\": \"✓ Settings discovered (ID: {settings_id})\"}}\n\n"
-        settings_screen = analyzer.analyze_screen(settings_id, SETTINGS_UI)
-        graph.add_screen(settings_screen)
-        
-        graph.add_transition(home_id, "tap nav_settings", settings_id)
-        graph.add_transition(settings_id, "tap btn_back", home_id)
-        await asyncio.sleep(1)
-
-        # 4. Products
-        products_id = generate_fingerprint(PRODUCTS_UI)
-        yield f"data: {{\"status\": \"✓ Products discovered (ID: {products_id})\"}}\n\n"
-        products_screen = analyzer.analyze_screen(products_id, PRODUCTS_UI)
-        graph.add_screen(products_screen)
-        
-        graph.add_transition(home_id, "tap nav_products", products_id)
-        graph.add_transition(products_id, "tap btn_back", home_id)
-        await asyncio.sleep(1)
-        
-        # Generate Knowledge Pack
-        yield "data: {\"status\": \"Generating Knowledge Pack...\"}\n\n"
-        generator = KnowledgeGenerator()
-        app_knowledge_pack = generator.generate_pack(graph, "DemoShop", "1.0")
-        
-        # Save to disk
-        with open("app_knowledge.json", "w") as f:
-            f.write(app_knowledge_pack.model_dump_json(indent=2))
+        async for event in explorer.run():
+            yield event
             
-        yield f"data: {{\"status\": \"Exploration complete. {len(graph.screens)} screens, {sum(len(s.elements) for s in graph.screens.values())} elements.\", \"done\": true}}\n\n"
+        # After exploration completes, load the generated pack to memory if needed
+        if os.path.exists("app_knowledge.json"):
+            with open("app_knowledge.json", "r") as f:
+                app_knowledge_pack = KnowledgePack(**json.loads(f.read()))
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
