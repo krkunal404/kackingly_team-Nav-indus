@@ -1,246 +1,257 @@
-import { useState, useEffect, useRef } from 'react'
-import { Play, Activity, Smartphone, MessageSquare, Code2, RefreshCw } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import Header from './components/Header'
+import ScanPanel from './components/ScanPanel'
+import TabBar from './components/TabBar'
+import AppMapView from './components/AppMapView'
+import ScreenSidebar from './components/ScreenSidebar'
+import AiExplorationLog from './components/AiExplorationLog'
+import JourneysView from './components/JourneysView'
+import DesignSystemView from './components/DesignSystemView'
+import DocsExportView from './components/DocsExportView'
+import ChatAgent from './components/ChatAgent'
+import ErrorBoundary from './components/ErrorBoundary'
+import { 
+  DEMOSHOP_APP, 
+  DEMOSHOP_SCREENS, 
+  INITIAL_AI_LOGS, 
+  DEMOSHOP_JOURNEYS, 
+  DEMOSHOP_DESIGN 
+} from './data/demoShopData'
 import './index.css'
 
-function App() {
+export default function App() {
+  const [activeTab, setActiveTab] = useState('map')
+  const [screens, setScreens] = useState(DEMOSHOP_SCREENS)
+  // Default to Home screen
+  const [activeScreen, setActiveScreen] = useState(DEMOSHOP_SCREENS[0])
+  const [logs, setLogs] = useState(INITIAL_AI_LOGS)
   const [scanning, setScanning] = useState(false)
-  const [logs, setLogs] = useState([])
-  const [knowledge, setKnowledge] = useState(null)
-  const [activeScreen, setActiveScreen] = useState(null)
-  
-  // Chat state
-  const [question, setQuestion] = useState('')
-  const [chat, setChat] = useState([])
-  const [asking, setAsking] = useState(false)
-  
-  const logRef = useRef(null)
+  const [scanFinished, setScanFinished] = useState(true)
 
-  useEffect(() => {
-    if (logRef.current) {
-      logRef.current.scrollTop = logRef.current.scrollHeight
+  // Current active screen index for "X of 6"
+  const currentIndex = screens.findIndex(s => s.screen_id === activeScreen?.screen_id) + 1 || 1
+
+  const handleNextScreen = () => {
+    const cur = screens.findIndex(s => s.screen_id === activeScreen?.screen_id)
+    const nextIdx = (cur + 1) % screens.length
+    setActiveScreen(screens[nextIdx])
+  }
+
+  const handlePrevScreen = () => {
+    const cur = screens.findIndex(s => s.screen_id === activeScreen?.screen_id)
+    const prevIdx = (cur - 1 + screens.length) % screens.length
+    setActiveScreen(screens[prevIdx])
+  }
+
+  const handleNavigateToScreenName = (name) => {
+    if (!name) return
+    const target = screens.find(s => s.name.toLowerCase() === name.toLowerCase())
+    if (target) {
+      setActiveScreen(target)
     }
-  }, [logs])
+  }
 
-  const startScan = async () => {
+  // Interactive scan simulation
+  const handleStartScan = () => {
     setScanning(true)
+    setScanFinished(false)
     setLogs([])
-    setKnowledge(null)
-    setActiveScreen(null)
-    setChat([])
-    
-    try {
-      const eventSource = new EventSource('http://localhost:8000/api/scan')
-      
-      eventSource.onmessage = (event) => {
-        const data = JSON.parse(event.data)
-        setLogs(prev => [...prev, data.status])
-        
-        if (data.done) {
-          eventSource.close()
-          setScanning(false)
-          fetchKnowledge()
-        }
+
+    const simulatedSteps = [
+      {
+        time: "10:15:01",
+        type: "screen",
+        title: "Launched Android APK: DemoShop.apk",
+        desc: "Attached accessibility tree observer via ADB emulator",
+        status: "Success",
+        statusType: "success"
+      },
+      {
+        time: "10:15:03",
+        type: "screen",
+        title: "Captured screen: Home",
+        desc: "Found 6 interactive elements. Fingerprint generated: fp_home_9a7e",
+        status: "Success",
+        statusType: "success"
+      },
+      {
+        time: "10:15:05",
+        type: "decision",
+        title: "AI Decision",
+        desc: '"Home has 3 primary navigation paths: Accounts, Payments, Profile. Prioritizing Payments flow."',
+        status: "Reasoned",
+        statusType: "reasoned"
+      },
+      {
+        time: "10:15:07",
+        type: "action",
+        title: 'Performed action: tap "Payments"',
+        desc: "Injected tap event into resource-id: nav_payments",
+        status: "Success",
+        statusType: "success"
+      },
+      {
+        time: "10:15:09",
+        type: "screen",
+        title: "Navigated to: Payments",
+        desc: "Found 5 interactive elements (Send Money, Pay Bills, Scan QR)",
+        status: "Success",
+        statusType: "success"
+      },
+      {
+        time: "10:15:11",
+        type: "decision",
+        title: "AI Decision",
+        desc: '"Send Money is a critical user transactional journey. Exploring form elements."',
+        status: "Reasoned",
+        statusType: "reasoned"
+      },
+      {
+        time: "10:15:13",
+        type: "action",
+        title: 'Performed action: tap "Send Money"',
+        desc: "Dispatched click on Send Money card",
+        status: "Success",
+        statusType: "success"
+      },
+      {
+        time: "10:15:16",
+        type: "screen",
+        title: "Navigated to: Send Money",
+        desc: "Found 8 elements (recipient, amount, note, continue). Passed form gate.",
+        status: "Success",
+        statusType: "success"
+      },
+      {
+        time: "10:15:19",
+        type: "action",
+        title: 'Performed action: tap "Continue"',
+        desc: "Triggered payment confirmation dialog",
+        status: "Success",
+        statusType: "success"
+      },
+      {
+        time: "10:15:22",
+        type: "screen",
+        title: "Navigated to: Confirmation",
+        desc: "Receipt generated. All 8 screens mapped with 47 UI elements.",
+        status: "Success",
+        statusType: "success"
       }
-      
-      eventSource.onerror = () => {
-        eventSource.close()
+    ]
+
+    let step = 0
+    const interval = setInterval(() => {
+      if (step < simulatedSteps.length) {
+        setLogs(prev => [...prev, simulatedSteps[step]])
+        step++
+      } else {
+        clearInterval(interval)
         setScanning(false)
-        setLogs(prev => [...prev, "Error connecting to autonomous explorer."])
+        setScanFinished(true)
       }
-    } catch (err) {
-      setScanning(false)
-      setLogs(prev => [...prev, "Failed to start scan."])
-    }
+    }, 600)
   }
 
-  const fetchKnowledge = async () => {
-    try {
-      const res = await fetch('http://localhost:8000/api/knowledge')
-      if (res.ok) {
-        const data = await res.json()
-        setKnowledge(data)
-        if (data.screens && data.screens.length > 0) {
-          setActiveScreen(data.screens[0])
-        }
+  // Download Knowledge Pack JSON
+  const handleDownloadKnowledgePack = () => {
+    const knowledgePack = {
+      app: DEMOSHOP_APP,
+      screens: screens,
+      journeys: DEMOSHOP_JOURNEYS,
+      design_system: DEMOSHOP_DESIGN,
+      scan_metadata: {
+        screens_discovered: 8,
+        elements_discovered: 47,
+        journeys_mapped: 12,
+        actions_extracted: 31
       }
-    } catch (err) {
-      console.error(err)
     }
-  }
 
-  const askAgent = async (e) => {
-    e.preventDefault()
-    if (!question.trim()) return
-    
-    const q = question
-    setQuestion('')
-    setChat(prev => [...prev, { role: 'user', text: q }])
-    setAsking(true)
-    
-    try {
-      const res = await fetch('http://localhost:8000/api/query', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: q })
-      })
-      const data = await res.json()
-      setChat(prev => [...prev, { role: 'ai', text: data.answer }])
-    } catch (err) {
-      setChat(prev => [...prev, { role: 'ai', text: "Error connecting to AI Agent." }])
-    } finally {
-      setAsking(false)
-    }
+    const blob = new Blob([JSON.stringify(knowledgePack, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `DemoShop_Knowledge_Pack.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 
   return (
-    <div className="app-container">
-      <header>
-        <h1>AppMind</h1>
-        <p>Autonomously explore and understand any Android app</p>
-      </header>
+    <div className="app-wrapper">
+      {/* Top Bar */}
+      <Header onDownloadPack={handleDownloadKnowledgePack} />
 
-      <div className="dashboard-grid">
-        {/* Left Column - Controls & Status */}
-        <div className="left-panel">
-          <div className="card">
-            <h2><Activity size={20} color="#c084fc" /> Autonomous Scan</h2>
-            
-            <button 
-              className="btn-primary" 
-              onClick={startScan}
-              disabled={scanning}
-            >
-              {scanning ? <RefreshCw className="spinner" size={18} /> : <Play size={18} />}
-              {scanning ? 'Scanning...' : 'START AUTONOMOUS SCAN'}
-            </button>
-            
-            {logs.length > 0 && (
-              <div className="status-log" ref={logRef}>
-                {logs.map((log, i) => (
-                  <div key={i} className="log-entry">&gt; {log}</div>
-                ))}
-              </div>
-            )}
-            
-            {knowledge && (
-              <div className="stat-grid">
-                <div className="stat-item">
-                  <div className="stat-value">{knowledge.scan_metadata.screens_discovered}</div>
-                  <div className="stat-label">Screens</div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-value">{knowledge.scan_metadata.elements_discovered}</div>
-                  <div className="stat-label">Elements</div>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          {knowledge && (
-            <div className="card" style={{ marginTop: '1.5rem' }}>
-              <h2><MessageSquare size={20} color="#6366f1" /> Ask App Agent</h2>
-              <div className="chat-box">
-                <div className="chat-messages">
-                  {chat.length === 0 && (
-                    <div style={{ color: '#94a3b8', textAlign: 'center', marginTop: '2rem' }}>
-                      Ask me anything about how to use {knowledge.app.name}.
-                    </div>
-                  )}
-                  {chat.map((msg, i) => (
-                    <div key={i} className={`msg ${msg.role}`}>
-                      {msg.text}
-                    </div>
-                  ))}
-                  {asking && <div className="msg ai">Thinking...</div>}
-                </div>
-                <form className="chat-input" onSubmit={askAgent}>
-                  <input 
-                    type="text" 
-                    placeholder="E.g., How do I change settings?" 
-                    value={question}
-                    onChange={(e) => setQuestion(e.target.value)}
-                    disabled={asking}
+      {/* Main Grid: Left Sidebar + Center/Right Area */}
+      <div className="main-dashboard-grid">
+        {/* Left Column: Sidebar with Target App, Stats & Explorer Status */}
+        <ScanPanel 
+          scanning={scanning} 
+          onStartScan={handleStartScan} 
+          appData={DEMOSHOP_APP}
+          scanFinished={scanFinished}
+        />
+
+        {/* Center + Right Section */}
+        <div className="center-right-col" style={{ gridColumn: 'span 2' }}>
+          {/* Top Tabs */}
+          <TabBar activeTab={activeTab} setActiveTab={setActiveTab} />
+
+          <ErrorBoundary>
+            {/* Tab 1: Application Map & Screen Details */}
+            {activeTab === 'map' && (
+              <>
+                <div className="map-details-split">
+                  {/* Center: Interactive Graph Map */}
+                  <AppMapView 
+                    screens={screens} 
+                    activeScreen={activeScreen} 
+                    onSelectScreen={setActiveScreen} 
                   />
-                  <button type="submit" disabled={asking}>Ask</button>
-                </form>
-              </div>
-            </div>
-          )}
-        </div>
 
-        {/* Right Column - Graph & Rebuild */}
-        <div className="right-panel">
-          {knowledge ? (
-            <>
-              <div className="card">
-                <h2><Code2 size={20} color="#10b981" /> App Knowledge Graph</h2>
-                <div className="graph-view" style={{ flexDirection: 'column', gap: '10px', padding: '20px' }}>
-                   {knowledge.screens.map((screen, idx) => (
-                     <div 
-                        key={screen.screen_id} 
-                        className={`node ${activeScreen?.screen_id === screen.screen_id ? 'active' : ''}`}
-                        onClick={() => setActiveScreen(screen)}
-                     >
-                       {screen.name}
-                     </div>
-                   ))}
-                   <p style={{ color: '#94a3b8', fontSize: '0.8rem', marginTop: '1rem' }}>
-                     Click a node to view its AI-generated profile and UI Rebuild.
-                   </p>
+                  {/* Right: Screen Details with Realistic Phone Preview */}
+                  <ScreenSidebar 
+                    screen={activeScreen}
+                    totalScreens={screens.length}
+                    currentIndex={currentIndex}
+                    onNext={handleNextScreen}
+                    onPrev={handlePrevScreen}
+                    onNavigateToScreen={handleNavigateToScreenName}
+                  />
                 </div>
-              </div>
 
-              {activeScreen && (
-                <div className="card screen-profile">
-                  <h2><Smartphone size={20} /> Screen Profile: {activeScreen.name}</h2>
-                  <div className="profile-grid">
-                    <div>
-                      <h4 style={{ color: '#c084fc', marginBottom: '0.5rem' }}>Purpose</h4>
-                      <p style={{ marginBottom: '1rem' }}>{activeScreen.purpose}</p>
-                      
-                      <h4 style={{ color: '#c084fc', marginBottom: '0.5rem' }}>Elements Discovered</h4>
-                      <div>
-                        {activeScreen.elements.map((el, i) => (
-                          <span key={i} className="pill">{el.label || el.type}</span>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div>
-                       <h4 style={{ color: '#10b981', marginBottom: '0.5rem' }}>Rebuild Demo</h4>
-                       <div className="rebuild-demo" style={{
-                         backgroundColor: activeScreen.design?.background_color || '#fff',
-                         fontFamily: activeScreen.design?.font_family || 'sans-serif',
-                       }}>
-                         <h3>{knowledge.app.name}</h3>
-                         <div style={{ color: '#666', marginBottom: '2rem' }}>{activeScreen.name}</div>
-                         
-                         {activeScreen.elements.filter(e => e.interactive).map((el, i) => (
-                           <button key={i} className="rebuild-btn" style={{
-                             backgroundColor: activeScreen.design?.primary_color || '#6750A4',
-                             borderRadius: activeScreen.design?.corner_style === 'rounded' ? '24px' : '4px'
-                           }}>
-                             {el.label || el.type}
-                           </button>
-                         ))}
-                       </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </>
-          ) : (
-             <div className="card" style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-               <div style={{ textAlign: 'center', color: '#64748b' }}>
-                 <Activity size={48} style={{ margin: '0 auto', opacity: 0.5 }} />
-                 <p style={{ marginTop: '1rem' }}>Run a scan to generate the App Knowledge Graph</p>
-               </div>
-             </div>
-          )}
+                {/* Bottom: AI Exploration Log */}
+                <AiExplorationLog logs={logs} />
+              </>
+            )}
+
+            {/* Tab 2: User Journeys */}
+            {activeTab === 'journeys' && (
+              <JourneysView />
+            )}
+
+            {/* Tab 3: Design System */}
+            {activeTab === 'design' && (
+              <DesignSystemView 
+                knowledge={{ design_system: DEMOSHOP_DESIGN, screens: screens }} 
+              />
+            )}
+
+            {/* Tab 4: Docs & Onboarding Generator */}
+            {activeTab === 'docs' && (
+              <DocsExportView 
+                knowledge={{ app: DEMOSHOP_APP, screens: screens, journeys: DEMOSHOP_JOURNEYS }} 
+              />
+            )}
+
+          </ErrorBoundary>
         </div>
       </div>
+
+      {/* Floating In-App Agent FAB */}
+      <ChatAgent appName="FMovies" />
     </div>
   )
 }
-
-export default App
